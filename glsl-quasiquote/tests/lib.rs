@@ -43,11 +43,12 @@ fn understands_pp_tests() {
   };
 }
 
+// Minecraft extension
 #[test]
 fn understands_pp_files() {
   let _ = glsl! {
-    #include <filename>
-    #include "filename"
+    #moj_import <filename>
+    #moj_import "filename"
     #line 2
     #line 2 4
     void main() {

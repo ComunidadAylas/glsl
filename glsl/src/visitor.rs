@@ -190,7 +190,8 @@ macro_rules! make_visitor_trait {
         Visit::Children
       }
 
-      fn visit_preprocessor_include(&mut self, _: $($ref)* syntax::PreprocessorInclude) -> Visit {
+      // Minecraft extension
+      fn visit_preprocessor_moj_import(&mut self, _: $($ref)* syntax::PreprocessorMojImport) -> Visit {
         Visit::Children
       }
 
@@ -464,7 +465,8 @@ macro_rules! make_host_trait {
             syntax::Preprocessor::If(pi) => pi.$mthd_name(visitor),
             syntax::Preprocessor::IfDef(pid) => pid.$mthd_name(visitor),
             syntax::Preprocessor::IfNDef(pind) => pind.$mthd_name(visitor),
-            syntax::Preprocessor::Include(pi) => pi.$mthd_name(visitor),
+            // Minecraft extension
+            syntax::Preprocessor::MojImport(pmi) => pmi.$mthd_name(visitor),
             syntax::Preprocessor::Line(pl) => pl.$mthd_name(visitor),
             syntax::Preprocessor::Pragma(pp) => pp.$mthd_name(visitor),
             syntax::Preprocessor::Undef(pu) => pu.$mthd_name(visitor),
@@ -557,12 +559,13 @@ macro_rules! make_host_trait {
       }
     }
 
-    impl $host_ty for syntax::PreprocessorInclude {
+    // Minecraft extension
+    impl $host_ty for syntax::PreprocessorMojImport {
       fn $mthd_name<V>($($ref)* self, visitor: &mut V)
       where
           V: $visitor_ty,
       {
-        let _ = visitor.visit_preprocessor_include(self);
+        let _ = visitor.visit_preprocessor_moj_import(self);
       }
     }
 

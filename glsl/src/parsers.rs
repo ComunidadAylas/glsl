@@ -1600,7 +1600,8 @@ pub fn preprocessor(i: &str) -> ParserResult<syntax::Preprocessor> {
       map(pp_if, syntax::Preprocessor::If),
       map(pp_ifdef, syntax::Preprocessor::IfDef),
       map(pp_ifndef, syntax::Preprocessor::IfNDef),
-      map(pp_include, syntax::Preprocessor::Include),
+      // Minecraft extension
+      map(pp_mojimport, syntax::Preprocessor::MojImport),
       map(pp_line, syntax::Preprocessor::Line),
       map(pp_pragma, syntax::Preprocessor::Pragma),
       map(pp_undef, syntax::Preprocessor::Undef),
@@ -1757,15 +1758,16 @@ pub(crate) fn pp_ifndef(i: &str) -> ParserResult<syntax::PreprocessorIfNDef> {
   )(i)
 }
 
-/// Parse a preprocessor include.
-pub(crate) fn pp_include(i: &str) -> ParserResult<syntax::PreprocessorInclude> {
+// Minecraft extension
+/// Parse a preprocessor moj_import.
+pub(crate) fn pp_mojimport(i: &str) -> ParserResult<syntax::PreprocessorMojImport> {
   map(
     tuple((
-      terminated(keyword("include"), pp_space0),
+      terminated(keyword("moj_import"), pp_space0),
       cut(terminated(path_lit, pp_space0)),
       cut(eol),
     )),
-    |(_, path, _)| syntax::PreprocessorInclude { path },
+    |(_, path, _)| syntax::PreprocessorMojImport { path },
   )(i)
 }
 

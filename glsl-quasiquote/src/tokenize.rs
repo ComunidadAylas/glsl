@@ -102,7 +102,11 @@ impl_tokenize!(syntax::PreprocessorError, tokenize_preprocessor_error);
 impl_tokenize!(syntax::PreprocessorIf, tokenize_preprocessor_if);
 impl_tokenize!(syntax::PreprocessorIfDef, tokenize_preprocessor_ifdef);
 impl_tokenize!(syntax::PreprocessorIfNDef, tokenize_preprocessor_ifndef);
-impl_tokenize!(syntax::PreprocessorInclude, tokenize_preprocessor_include);
+// Minecraft extension
+impl_tokenize!(
+  syntax::PreprocessorMojImport,
+  tokenize_preprocessor_moj_import
+);
 impl_tokenize!(syntax::PreprocessorLine, tokenize_preprocessor_line);
 impl_tokenize!(syntax::PreprocessorPragma, tokenize_preprocessor_pragma);
 impl_tokenize!(syntax::PreprocessorUndef, tokenize_preprocessor_undef);
@@ -1172,9 +1176,10 @@ fn tokenize_preprocessor(pp: &syntax::Preprocessor) -> TokenStream {
       quote! { glsl::syntax::Preprocessor::IfNDef(#pind) }
     }
 
-    syntax::Preprocessor::Include(ref pi) => {
-      let pi = tokenize_preprocessor_include(pi);
-      quote! { glsl::syntax::Preprocessor::Include(#pi) }
+    // Minecraft extension
+    syntax::Preprocessor::MojImport(ref pmi) => {
+      let pmi = tokenize_preprocessor_moj_import(pmi);
+      quote! { glsl::syntax::Preprocessor::MojImport(#pmi) }
     }
 
     syntax::Preprocessor::Line(ref pl) => {
@@ -1291,11 +1296,12 @@ fn tokenize_preprocessor_ifndef(pind: &syntax::PreprocessorIfNDef) -> TokenStrea
   }
 }
 
-fn tokenize_preprocessor_include(pi: &syntax::PreprocessorInclude) -> TokenStream {
+// Minecraft extension
+fn tokenize_preprocessor_moj_import(pi: &syntax::PreprocessorMojImport) -> TokenStream {
   let path = tokenize_path(&pi.path);
 
   quote! {
-    glsl::syntax::PreprocessorInclude {
+    glsl::syntax::PreprocessorMojImport {
       path: #path
     }
   }

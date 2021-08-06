@@ -1532,7 +1532,8 @@ where
     syntax::Preprocessor::If(ref pi) => show_preprocessor_if(f, pi),
     syntax::Preprocessor::IfDef(ref pid) => show_preprocessor_ifdef(f, pid),
     syntax::Preprocessor::IfNDef(ref pind) => show_preprocessor_ifndef(f, pind),
-    syntax::Preprocessor::Include(ref pi) => show_preprocessor_include(f, pi),
+    // Minecraft extension
+    syntax::Preprocessor::MojImport(ref pmi) => show_preprocessor_moj_import(f, pmi),
     syntax::Preprocessor::Line(ref pl) => show_preprocessor_line(f, pl),
     syntax::Preprocessor::Pragma(ref pp) => show_preprocessor_pragma(f, pp),
     syntax::Preprocessor::Undef(ref pu) => show_preprocessor_undef(f, pu),
@@ -1626,11 +1627,12 @@ where
   let _ = f.write_str("\n");
 }
 
-pub fn show_preprocessor_include<F>(f: &mut F, pi: &syntax::PreprocessorInclude)
+// Minecraft extension
+pub fn show_preprocessor_moj_import<F>(f: &mut F, pi: &syntax::PreprocessorMojImport)
 where
   F: Write,
 {
-  let _ = f.write_str("#include ");
+  let _ = f.write_str("#moj_import ");
   show_path(f, &pi.path);
   let _ = f.write_str("\n");
 }

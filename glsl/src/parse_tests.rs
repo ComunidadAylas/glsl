@@ -2643,23 +2643,24 @@ fn parse_pp_ifndef() {
   );
 }
 
+// Minecraft extension
 #[test]
-fn parse_pp_include() {
+fn parse_pp_moj_import() {
   assert_eq!(
-    preprocessor("#include <filename>\n"),
+    preprocessor("#moj_import <filename>\n"),
     Ok((
       "",
-      syntax::Preprocessor::Include(syntax::PreprocessorInclude {
+      syntax::Preprocessor::MojImport(syntax::PreprocessorMojImport {
         path: syntax::Path::Absolute("filename".to_owned())
       })
     ))
   );
 
   assert_eq!(
-    preprocessor("#include \\\n\"filename\"\n"),
+    preprocessor("#moj_import \\\n\"filename\"\n"),
     Ok((
       "",
-      syntax::Preprocessor::Include(syntax::PreprocessorInclude {
+      syntax::Preprocessor::MojImport(syntax::PreprocessorMojImport {
         path: syntax::Path::Relative("filename".to_owned())
       })
     ))

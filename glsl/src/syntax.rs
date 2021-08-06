@@ -1174,7 +1174,8 @@ pub enum Preprocessor {
   If(PreprocessorIf),
   IfDef(PreprocessorIfDef),
   IfNDef(PreprocessorIfNDef),
-  Include(PreprocessorInclude),
+  // Minecraft extension
+  MojImport(PreprocessorMojImport),
   Line(PreprocessorLine),
   Pragma(PreprocessorPragma),
   Undef(PreprocessorUndef),
@@ -1229,9 +1230,10 @@ pub struct PreprocessorIfNDef {
   pub ident: Identifier,
 }
 
-/// An #include name annotation.
+// Minecraft extension
+/// An #moj_import name annotation.
 #[derive(Clone, Debug, PartialEq)]
-pub struct PreprocessorInclude {
+pub struct PreprocessorMojImport {
   pub path: Path,
 }
 
