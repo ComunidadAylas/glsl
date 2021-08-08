@@ -491,7 +491,7 @@ where
     let _ = write!(f, "{} ", name);
   }
 
-  let _ = f.write_str("{\n");
+  let _ = f.write_str("{");
 
   for field in &s.fields.0 {
     show_struct_field(f, field);
@@ -505,7 +505,7 @@ where
   F: Write,
 {
   show_struct_non_declaration(f, s);
-  let _ = f.write_str(";\n");
+  let _ = f.write_str(";");
 }
 
 pub fn show_struct_field<F>(f: &mut F, field: &syntax::StructFieldSpecifier)
@@ -528,11 +528,11 @@ where
 
   // write the rest of the identifiers
   for identifier in identifiers {
-    let _ = f.write_str(", ");
+    let _ = f.write_str(",");
     show_arrayed_identifier(f, identifier);
   }
 
-  let _ = f.write_str(";\n");
+  let _ = f.write_str(";");
 }
 
 pub fn show_array_spec<F>(f: &mut F, a: &syntax::ArraySpecifier)
@@ -839,9 +839,9 @@ where
         show_expr(f, &c);
         let _ = f.write_str(")");
       }
-      let _ = f.write_str(" ? ");
+      let _ = f.write_str("?");
       show_expr(f, &s);
-      let _ = f.write_str(" : ");
+      let _ = f.write_str(":");
       if e.precedence() <= expr.precedence() {
         show_expr(f, &e);
       } else {
@@ -861,9 +861,7 @@ where
         let _ = f.write_str(")");
       }
 
-      let _ = f.write_str(" ");
       show_assignment_op(f, &op);
-      let _ = f.write_str(" ");
 
       if e.precedence() <= op.precedence() {
         show_expr(f, &e);
@@ -896,7 +894,7 @@ where
         show_expr(f, first);
 
         for e in args_iter {
-          let _ = f.write_str(", ");
+          let _ = f.write_str(",");
           show_expr(f, e);
         }
       }
@@ -953,7 +951,7 @@ where
         let _ = f.write_str(")");
       }
 
-      let _ = f.write_str(", ");
+      let _ = f.write_str(",");
 
       if b.precedence() < expr.precedence() {
         show_expr(f, &b);
@@ -1129,20 +1127,20 @@ where
   match *d {
     syntax::Declaration::FunctionPrototype(ref proto) => {
       show_function_prototype(f, &proto);
-      let _ = f.write_str(";\n");
+      let _ = f.write_str(";");
     }
     syntax::Declaration::InitDeclaratorList(ref list) => {
       show_init_declarator_list(f, &list);
-      let _ = f.write_str(";\n");
+      let _ = f.write_str(";");
     }
     syntax::Declaration::Precision(ref qual, ref ty) => {
       show_precision_qualifier(f, &qual);
       show_type_specifier(f, &ty);
-      let _ = f.write_str(";\n");
+      let _ = f.write_str(";");
     }
     syntax::Declaration::Block(ref block) => {
       show_block(f, &block);
-      let _ = f.write_str(";\n");
+      let _ = f.write_str(";");
     }
     syntax::Declaration::Global(ref qual, ref identifiers) => {
       show_type_qualifier(f, &qual);
@@ -1157,7 +1155,7 @@ where
         }
       }
 
-      let _ = f.write_str(";\n");
+      let _ = f.write_str(";");
     }
   }
 }
@@ -1178,7 +1176,7 @@ where
     show_function_parameter_declaration(f, first);
 
     for param in iter {
-      let _ = f.write_str(", ");
+      let _ = f.write_str(",");
       show_function_parameter_declaration(f, param);
     }
   }
@@ -1214,7 +1212,6 @@ where
   F: Write,
 {
   show_type_specifier(f, &p.ty);
-  let _ = f.write_str(" ");
   show_arrayed_identifier(f, &p.ident);
 }
 
@@ -1225,7 +1222,7 @@ where
   show_single_declaration(f, &i.head);
 
   for decl in &i.tail {
-    let _ = f.write_str(", ");
+    let _ = f.write_str(",");
     show_single_declaration_no_type(f, decl);
   }
 }
@@ -1246,7 +1243,7 @@ where
   }
 
   if let Some(ref initializer) = d.initializer {
-    let _ = f.write_str(" = ");
+    let _ = f.write_str("=");
     show_initializer(f, initializer);
   }
 }
@@ -1258,7 +1255,7 @@ where
   show_arrayed_identifier(f, &d.ident);
 
   if let Some(ref initializer) = d.initializer {
-    let _ = f.write_str(" = ");
+    let _ = f.write_str("=");
     show_initializer(f, initializer);
   }
 }
@@ -1273,15 +1270,15 @@ where
       let mut iter = list.0.iter();
       let first = iter.next().unwrap();
 
-      let _ = f.write_str("{ ");
+      let _ = f.write_str("{");
       show_initializer(f, first);
 
       for ini in iter {
-        let _ = f.write_str(", ");
+        let _ = f.write_str(",");
         show_initializer(f, ini);
       }
 
-      let _ = f.write_str(" }");
+      let _ = f.write_str("}");
     }
   }
 }
@@ -1293,11 +1290,10 @@ where
   show_type_qualifier(f, &b.qualifier);
   let _ = f.write_str(" ");
   show_identifier(f, &b.name);
-  let _ = f.write_str(" {");
+  let _ = f.write_str("{");
 
   for field in &b.fields {
     show_struct_field(f, field);
-    let _ = f.write_str("\n");
   }
   let _ = f.write_str("}");
 
@@ -1311,7 +1307,6 @@ where
   F: Write,
 {
   show_function_prototype(f, &fd.prototype);
-  let _ = f.write_str(" ");
   show_compound_statement(f, &fd.statement);
 }
 
@@ -1319,13 +1314,13 @@ pub fn show_compound_statement<F>(f: &mut F, cst: &syntax::CompoundStatement)
 where
   F: Write,
 {
-  let _ = f.write_str("{\n");
+  let _ = f.write_str("{");
 
   for st in &cst.statement_list {
     show_statement(f, st);
   }
 
-  let _ = f.write_str("}\n");
+  let _ = f.write_str("}");
 }
 
 pub fn show_statement<F>(f: &mut F, st: &syntax::Statement)
@@ -1361,16 +1356,16 @@ where
     show_expr(f, e);
   }
 
-  let _ = f.write_str(";\n");
+  let _ = f.write_str(";");
 }
 
 pub fn show_selection_statement<F>(f: &mut F, sst: &syntax::SelectionStatement)
 where
   F: Write,
 {
-  let _ = f.write_str("if (");
+  let _ = f.write_str("if(");
   show_expr(f, &sst.cond);
-  let _ = f.write_str(") {\n");
+  let _ = f.write_str("){");
   show_selection_rest_statement(f, &sst.rest);
 }
 
@@ -1381,11 +1376,11 @@ where
   match *sst {
     syntax::SelectionRestStatement::Statement(ref if_st) => {
       show_statement(f, if_st);
-      let _ = f.write_str("}\n");
+      let _ = f.write_str("}");
     }
     syntax::SelectionRestStatement::Else(ref if_st, ref else_st) => {
       show_statement(f, if_st);
-      let _ = f.write_str("} else ");
+      let _ = f.write_str("}else ");
       show_statement(f, else_st);
     }
   }
@@ -1395,15 +1390,15 @@ pub fn show_switch_statement<F>(f: &mut F, sst: &syntax::SwitchStatement)
 where
   F: Write,
 {
-  let _ = f.write_str("switch (");
+  let _ = f.write_str("switch(");
   show_expr(f, &sst.head);
-  let _ = f.write_str(") {\n");
+  let _ = f.write_str("){");
 
   for st in &sst.body {
     show_statement(f, st);
   }
 
-  let _ = f.write_str("}\n");
+  let _ = f.write_str("}");
 }
 
 pub fn show_case_label<F>(f: &mut F, cl: &syntax::CaseLabel)
@@ -1414,10 +1409,10 @@ where
     syntax::CaseLabel::Case(ref e) => {
       let _ = f.write_str("case ");
       show_expr(f, e);
-      let _ = f.write_str(":\n");
+      let _ = f.write_str(":");
     }
     syntax::CaseLabel::Def => {
-      let _ = f.write_str("default:\n");
+      let _ = f.write_str("default:");
     }
   }
 }
@@ -1428,23 +1423,23 @@ where
 {
   match *ist {
     syntax::IterationStatement::While(ref cond, ref body) => {
-      let _ = f.write_str("while (");
+      let _ = f.write_str("while(");
       show_condition(f, cond);
-      let _ = f.write_str(") ");
+      let _ = f.write_str(")");
       show_statement(f, body);
     }
     syntax::IterationStatement::DoWhile(ref body, ref cond) => {
-      let _ = f.write_str("do ");
+      let _ = f.write_str("do");
       show_statement(f, body);
-      let _ = f.write_str(" while (");
+      let _ = f.write_str("while(");
       show_expr(f, cond);
-      let _ = f.write_str(")\n");
+      let _ = f.write_str(")");
     }
     syntax::IterationStatement::For(ref init, ref rest, ref body) => {
-      let _ = f.write_str("for (");
+      let _ = f.write_str("for(");
       show_for_init_statement(f, init);
       show_for_rest_statement(f, rest);
-      let _ = f.write_str(") ");
+      let _ = f.write_str(")");
       show_statement(f, body);
     }
   }
@@ -1460,7 +1455,7 @@ where
       show_fully_specified_type(f, ty);
       let _ = f.write_str(" ");
       show_identifier(f, name);
-      let _ = f.write_str(" = ");
+      let _ = f.write_str("=");
       show_initializer(f, initializer);
     }
   }
@@ -1488,7 +1483,7 @@ where
     show_condition(f, cond);
   }
 
-  let _ = f.write_str("; ");
+  let _ = f.write_str(";");
 
   if let Some(ref e) = r.post_expr {
     show_expr(f, e);
@@ -1501,20 +1496,20 @@ where
 {
   match *j {
     syntax::JumpStatement::Continue => {
-      let _ = f.write_str("continue;\n");
+      let _ = f.write_str("continue;");
     }
     syntax::JumpStatement::Break => {
-      let _ = f.write_str("break;\n");
+      let _ = f.write_str("break;");
     }
     syntax::JumpStatement::Discard => {
-      let _ = f.write_str("discard;\n");
+      let _ = f.write_str("discard;");
     }
     syntax::JumpStatement::Return(ref e) => {
       let _ = f.write_str("return ");
       if let Some(e) = e {
         show_expr(f, e);
       }
-      let _ = f.write_str(";\n");
+      let _ = f.write_str(";");
     }
   }
 }
@@ -1822,17 +1817,7 @@ return u;
 "#;
 
     // Ideally we would use SRC as the expected, but there's a bug in block braces generation
-    const DST: &'static str = r#"vec2 main() {
-float n = 0.;
-float p = 0.;
-float u = vec2(0., 0.);
-if (n-p>0.&&u.y<n&&u.y>p) {
-{
-}
-}
-return u;
-}
-"#;
+    const DST: &'static str = r#"vec2 main(){float n=0.;float p=0.;float u=vec2(0.,0.);if(n-p>0.&&u.y<n&&u.y>p){{}}return u;}"#;
 
     let mut s = String::new();
     show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
