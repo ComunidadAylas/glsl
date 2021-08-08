@@ -1314,13 +1314,17 @@ pub fn show_compound_statement<F>(f: &mut F, cst: &syntax::CompoundStatement)
 where
   F: Write,
 {
-  let _ = f.write_str("{");
+  if cst.statement_list.len() != 1 {
+    let _ = f.write_str("{");
+  }
 
   for st in &cst.statement_list {
     show_statement(f, st);
   }
 
-  let _ = f.write_str("}");
+  if cst.statement_list.len() != 1 {
+    let _ = f.write_str("}");
+  }
 }
 
 pub fn show_statement<F>(f: &mut F, st: &syntax::Statement)
@@ -1365,7 +1369,7 @@ where
 {
   let _ = f.write_str("if(");
   show_expr(f, &sst.cond);
-  let _ = f.write_str("){");
+  let _ = f.write_str(")");
   show_selection_rest_statement(f, &sst.rest);
 }
 
@@ -1376,11 +1380,10 @@ where
   match *sst {
     syntax::SelectionRestStatement::Statement(ref if_st) => {
       show_statement(f, if_st);
-      let _ = f.write_str("}");
     }
     syntax::SelectionRestStatement::Else(ref if_st, ref else_st) => {
       show_statement(f, if_st);
-      let _ = f.write_str("}else ");
+      let _ = f.write_str("else ");
       show_statement(f, else_st);
     }
   }
