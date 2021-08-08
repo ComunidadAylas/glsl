@@ -1820,7 +1820,7 @@ return u;
 "#;
 
     // Ideally we would use SRC as the expected, but there's a bug in block braces generation
-    const DST: &'static str = r#"vec2 main(){float n=0.;float p=0.;float u=vec2(0.,0.);if(n-p>0.&&u.y<n&&u.y>p){{}}return u;}"#;
+    const DST: &'static str = r#"vec2 main(){float n=0.;float p=0.;float u=vec2(0.,0.);if(n-p>0.&&u.y<n&&u.y>p){}return u;}"#;
 
     let mut s = String::new();
     show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
