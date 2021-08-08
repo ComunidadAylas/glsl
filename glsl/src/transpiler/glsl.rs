@@ -672,7 +672,7 @@ where
     show_type_name(f, first);
 
     for type_name in types_iter {
-      let _ = f.write_str(", ");
+      let _ = f.write_str(",");
       show_type_name(f, type_name);
     }
 
@@ -687,11 +687,11 @@ where
   let mut qualifiers = l.ids.0.iter();
   let first = qualifiers.next().unwrap();
 
-  let _ = f.write_str("layout (");
+  let _ = f.write_str("layout(");
   show_layout_qualifier_spec(f, first);
 
   for qual_spec in qualifiers {
-    let _ = f.write_str(", ");
+    let _ = f.write_str(",");
     show_layout_qualifier_spec(f, qual_spec);
   }
 
@@ -704,7 +704,7 @@ where
 {
   match *l {
     syntax::LayoutQualifierSpec::Identifier(ref i, Some(ref e)) => {
-      let _ = write!(f, "{} = ", i);
+      let _ = write!(f, "{}=", i);
       show_expr(f, &e);
     }
     syntax::LayoutQualifierSpec::Identifier(ref i, None) => show_identifier(f, &i),
