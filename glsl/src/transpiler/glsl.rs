@@ -1151,7 +1151,7 @@ where
         show_identifier(f, first);
 
         for identifier in iter {
-          let _ = write!(f, ", {}", identifier);
+          let _ = write!(f, ",{}", identifier);
         }
       }
 
