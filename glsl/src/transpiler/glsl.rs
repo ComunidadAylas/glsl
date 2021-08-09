@@ -1307,15 +1307,17 @@ where
   F: Write,
 {
   show_function_prototype(f, &fd.prototype);
-  show_compound_statement(f, &fd.statement);
+  show_compound_statement(f, &fd.statement, false);
 }
 
-pub fn show_compound_statement<F>(f: &mut F, cst: &syntax::CompoundStatement)
+pub fn show_compound_statement<F>(f: &mut F, cst: &syntax::CompoundStatement, sp: bool)
 where
   F: Write,
 {
   if cst.statement_list.len() != 1 {
     let _ = f.write_str("{");
+  } else if sp {
+    let _ = f.write_str(" ");
   }
 
   for st in &cst.statement_list {
@@ -1328,19 +1330,29 @@ where
 }
 
 pub fn show_statement<F>(f: &mut F, st: &syntax::Statement)
+  where
+      F: Write,
+{
+  show_statement_spaced(f, st, false)
+}
+
+pub fn show_statement_spaced<F>(f: &mut F, st: &syntax::Statement, sp: bool)
 where
   F: Write,
 {
   match *st {
-    syntax::Statement::Compound(ref cst) => show_compound_statement(f, cst),
-    syntax::Statement::Simple(ref sst) => show_simple_statement(f, sst),
+    syntax::Statement::Compound(ref cst) => show_compound_statement(f, cst, sp),
+    syntax::Statement::Simple(ref sst) => show_simple_statement(f, sst, sp),
   }
 }
 
-pub fn show_simple_statement<F>(f: &mut F, sst: &syntax::SimpleStatement)
+pub fn show_simple_statement<F>(f: &mut F, sst: &syntax::SimpleStatement, sp: bool)
 where
   F: Write,
 {
+  if sp {
+    let _ = f.write_str(" ");
+  }
   match *sst {
     syntax::SimpleStatement::Declaration(ref d) => show_declaration(f, d),
     syntax::SimpleStatement::Expression(ref e) => show_expression_statement(f, e),
@@ -1383,8 +1395,8 @@ where
     }
     syntax::SelectionRestStatement::Else(ref if_st, ref else_st) => {
       show_statement(f, if_st);
-      let _ = f.write_str("else ");
-      show_statement(f, else_st);
+      let _ = f.write_str("else");
+      show_statement_spaced(f, else_st, true);
     }
   }
 }
@@ -1433,7 +1445,7 @@ where
     }
     syntax::IterationStatement::DoWhile(ref body, ref cond) => {
       let _ = f.write_str("do");
-      show_statement(f, body);
+      show_statement_spaced(f, body, true);
       let _ = f.write_str("while(");
       show_expr(f, cond);
       let _ = f.write_str(")");
@@ -1813,7 +1825,10 @@ mod tests {
 float n = 0.;
 float p = 0.;
 float u = vec2(0., 0.);
+do p+=0.2;while(p<20);
 if (n-p>0.&&u.y<n&&u.y>p) {
+} else if (u > 0.1) {
+  p = 0.1;
 }
 return u;
 }
