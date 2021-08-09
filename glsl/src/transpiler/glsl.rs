@@ -1886,6 +1886,81 @@ return u;
   }
 
   #[test]
+  fn test_ternary() {
+    use crate::parsers::function_definition;
+
+    const SRC: &'static str = r#"void main() {
+  float x = 0, y = 0, z = 0;
+  float w = (x ? x : z);
+  float q = y ? (z ? z : x) : z;
+}
+"#;
+
+    const DST: &'static str = r#"void main(){float x=0,y=0,z=0;float w=x?x:z;float q=y?z?z:x:z;}"#;
+
+    let mut s = String::new();
+    show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
+
+    assert_eq!(s, DST);
+  }
+
+  #[test]
+  fn test_if_else() {
+    use crate::parsers::function_definition;
+
+    const SRC: &'static str = r#"void main() {
+  int i = 5;
+  if (i > 0) {
+  } else if (i < 5) {
+    a();
+  } else if (i < 1) {
+    a();
+    b();
+  } else {
+    a();
+  }
+}
+"#;
+
+    const DST: &'static str = r#"void main(){int i=5;if(i>0){}else if(i<5)a();else if(i<1){a();b();}else a();}"#;
+
+    let mut s = String::new();
+    show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
+
+    assert_eq!(s, DST);
+  }
+
+  #[test]
+  fn test_switch() {
+    use crate::parsers::function_definition;
+
+    const SRC: &'static str = r#"void main() {
+  int i = 10;
+  switch (i) {
+  case 0: { a(); }
+  case 5: { b(); break; }
+  default: break;
+  }
+  switch (i) {
+  case 0:
+    switch (1) {
+    default: break;
+    }
+    break;
+  default: break;
+  }
+}
+"#;
+
+    const DST: &'static str = r#"void main(){int i=10;switch(i){case 0:a();case 5:{b();break;}default:break;}switch(i){case 0:switch(1){default:break;}break;default:break;}}"#;
+
+    let mut s = String::new();
+    show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
+
+    assert_eq!(s, DST);
+  }
+
+  #[test]
   fn roundtrip_glsl_complex_expr() {
     let zero = syntax::Expr::DoubleConst(0.);
     let ray = syntax::Expr::Variable("ray".into());
