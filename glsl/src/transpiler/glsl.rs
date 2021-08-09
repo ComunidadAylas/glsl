@@ -1825,10 +1825,7 @@ mod tests {
 float n = 0.;
 float p = 0.;
 float u = vec2(0., 0.);
-do p+=0.2;while(p<20);
 if (n-p>0.&&u.y<n&&u.y>p) {
-} else if (u > 0.1) {
-  p = 0.1;
 }
 return u;
 }
