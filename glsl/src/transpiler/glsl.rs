@@ -1330,8 +1330,8 @@ where
 }
 
 pub fn show_statement<F>(f: &mut F, st: &syntax::Statement)
-  where
-      F: Write,
+where
+  F: Write,
 {
   show_statement_spaced(f, st, false)
 }
@@ -1797,18 +1797,18 @@ mod tests {
   fn ternary_parentheses() {
     assert_eq!(
       to_string(&expr("a ? b : c ? d : e").unwrap().1),
-      "a ? b : c ? d : e"
+      "a?b:c?d:e"
     );
     assert_eq!(
       to_string(&expr("(a ? b : c) ? d : e").unwrap().1),
-      "(a ? b : c) ? d : e"
+      "(a?b:c)?d:e"
     );
   }
 
   #[test]
   fn assignment_parentheses() {
-    assert_eq!(to_string(&expr("a = b = c").unwrap().1), "a = b = c");
-    assert_eq!(to_string(&expr("(a = b) = c").unwrap().1), "(a = b) = c");
+    assert_eq!(to_string(&expr("a = b = c").unwrap().1), "a=b=c");
+    assert_eq!(to_string(&expr("(a = b) = c").unwrap().1), "(a=b)=c");
   }
 
   #[test]
