@@ -1448,7 +1448,7 @@ where
       show_statement_spaced(f, body, true);
       let _ = f.write_str("while(");
       show_expr(f, cond);
-      let _ = f.write_str(")");
+      let _ = f.write_str(");");
     }
     syntax::IterationStatement::For(ref init, ref rest, ref body) => {
       let _ = f.write_str("for(");
@@ -1485,6 +1485,7 @@ where
       if let Some(ref e) = *expr {
         show_expr(f, e);
       }
+      let _ = f.write_str(";");
     }
     syntax::ForInitStatement::Declaration(ref d) => show_declaration(f, d),
   }
@@ -1831,8 +1832,52 @@ return u;
 }
 "#;
 
-    // Ideally we would use SRC as the expected, but there's a bug in block braces generation
     const DST: &'static str = r#"vec2 main(){float n=0.;float p=0.;float u=vec2(0.,0.);if(n-p>0.&&u.y<n&&u.y>p){}return u;}"#;
+
+    let mut s = String::new();
+    show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
+
+    assert_eq!(s, DST);
+  }
+
+  #[test]
+  fn test_do_statement() {
+    use crate::parsers::function_definition;
+
+    const SRC: &'static str = r#"void main() {
+  do { } while (true);
+  do {
+    a();
+  } while (true);
+  do {
+    a();
+    b();
+  } while (true);
+}
+"#;
+
+    const DST: &'static str = r#"void main(){do{}while(true);do a();while(true);do{a();b();}while(true);}"#;
+
+    let mut s = String::new();
+    show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
+
+    assert_eq!(s, DST);
+  }
+
+  #[test]
+  fn test_for_statement() {
+    use crate::parsers::function_definition;
+
+    const SRC: &'static str = r#"void main() {
+  int i = 0;
+  for(;;) { }
+  for(i = 0;; ) { }
+  for(int i = 0; i < 10;) { }
+  for(int i = 0; i < 10; i++) { }
+}
+"#;
+
+    const DST: &'static str = r#"void main(){int i=0;for(;;){}for(i=0;;){}for(int i=0;i<10;){}for(int i=0;i<10;i++){}}"#;
 
     let mut s = String::new();
     show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
