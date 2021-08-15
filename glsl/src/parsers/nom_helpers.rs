@@ -83,11 +83,10 @@ pub fn str_till_eol(i: &str) -> ParserResult<&str> {
       eol,
     )),
     |i| {
-      if i.as_bytes().last() == Some(&b'\n') {
-        &i[0..i.len() - 1]
-      } else {
-        i
-      }
+      i.strip_suffix("\r\n")
+        .unwrap_or(i)
+        .strip_suffix('\n')
+        .unwrap_or(i)
     },
   )(i)
 }
