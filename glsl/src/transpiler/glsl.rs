@@ -1856,7 +1856,8 @@ return u;
 }
 "#;
 
-    const DST: &'static str = r#"void main(){do{}while(true);do a();while(true);do{a();b();}while(true);}"#;
+    const DST: &'static str =
+      r#"void main(){do{}while(true);do a();while(true);do{a();b();}while(true);}"#;
 
     let mut s = String::new();
     show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
@@ -1877,7 +1878,8 @@ return u;
 }
 "#;
 
-    const DST: &'static str = r#"void main(){int i=0;for(;;){}for(i=0;;){}for(int i=0;i<10;){}for(int i=0;i<10;i++){}}"#;
+    const DST: &'static str =
+      r#"void main(){int i=0;for(;;){}for(i=0;;){}for(int i=0;i<10;){}for(int i=0;i<10;i++){}}"#;
 
     let mut s = String::new();
     show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
@@ -1922,7 +1924,8 @@ return u;
 }
 "#;
 
-    const DST: &'static str = r#"void main(){int i=5;if(i>0){}else if(i<5)a();else if(i<1){a();b();}else a();}"#;
+    const DST: &'static str =
+      r#"void main(){int i=5;if(i>0){}else if(i<5)a();else if(i<1){a();b();}else a();}"#;
 
     let mut s = String::new();
     show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
