@@ -1212,6 +1212,7 @@ where
   F: Write,
 {
   show_type_specifier(f, &p.ty);
+  let _ = f.write_str(" ");
   show_arrayed_identifier(f, &p.ident);
 }
 
@@ -1307,14 +1308,16 @@ where
   F: Write,
 {
   show_function_prototype(f, &fd.prototype);
-  show_compound_statement(f, &fd.statement, false);
+  show_compound_statement(f, &fd.statement, false, true);
 }
 
-pub fn show_compound_statement<F>(f: &mut F, cst: &syntax::CompoundStatement, sp: bool)
+pub fn show_compound_statement<F>(f: &mut F, cst: &syntax::CompoundStatement, sp: bool, force_compound: bool)
 where
   F: Write,
 {
-  if cst.statement_list.len() != 1 {
+  let write_braces = cst.statement_list.len() != 1 || force_compound;
+
+  if write_braces {
     let _ = f.write_str("{");
   } else if sp {
     let _ = f.write_str(" ");
@@ -1324,7 +1327,7 @@ where
     show_statement(f, st);
   }
 
-  if cst.statement_list.len() != 1 {
+  if write_braces {
     let _ = f.write_str("}");
   }
 }
@@ -1341,7 +1344,7 @@ where
   F: Write,
 {
   match *st {
-    syntax::Statement::Compound(ref cst) => show_compound_statement(f, cst, sp),
+    syntax::Statement::Compound(ref cst) => show_compound_statement(f, cst, sp, false),
     syntax::Statement::Simple(ref sst) => show_simple_statement(f, sst, sp),
   }
 }
@@ -1833,6 +1836,23 @@ return u;
 "#;
 
     const DST: &'static str = r#"vec2 main(){float n=0.;float p=0.;float u=vec2(0.,0.);if(n-p>0.&&u.y<n&&u.y>p){}return u;}"#;
+
+    let mut s = String::new();
+    show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
+
+    assert_eq!(s, DST);
+  }
+
+  #[test]
+  fn single_statement_with_parameters_function_definition() {
+    use crate::parsers::function_definition;
+
+    const SRC: &'static str = r#"float rand(vec2 co, vec2 _) {
+  return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+}
+"#;
+
+    const DST: &'static str = r#"float rand(vec2 co,vec2 _){return fract(sin(dot(co,vec2(12.9898,78.233)))*43758.547);}"#;
 
     let mut s = String::new();
     show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
