@@ -1752,7 +1752,7 @@ pub fn show_translation_unit<F>(f: &mut F, tu: &syntax::TranslationUnit)
 where
   F: Write,
 {
-  let mut newlines_just_added = false;
+  let mut newlines_just_added = true;
 
   for ed in &(tu.0).0 {
     let add_newlines = external_declaration_requires_own_line(ed);
@@ -2000,22 +2000,26 @@ return u;
   }
 
   #[test]
-  fn test_translation_unit_with_preprocessor_directives() {
+  fn translation_unit_with_preprocessor_directives() {
     use crate::parsers::translation_unit;
 
-    const SRC: &'static str = r#"vec4 x;
+    const SRC: &'static str = r#"#define A "B"
 
-#define A "B"
+vec4 u;
+
 #define C "D"
+#define E "F"
+#define G "H"
 
+vec4 x;
 vec4 y;
 vec4 z;
 
-#define E "F"
+#define I "J"
 "#;
 
     const DST: &'static str =
-      "vec4 x;\n#define A \"B\"\n#define C \"D\"\nvec4 y;vec4 z;\n#define E \"F\"\n";
+      "#define A \"B\"\nvec4 u;\n#define C \"D\"\n#define E \"F\"\n#define G \"H\"\nvec4 x;vec4 y;vec4 z;\n#define I \"J\"\n";
 
     let mut s = String::new();
     show_translation_unit(&mut s, &translation_unit(SRC).unwrap().1);
