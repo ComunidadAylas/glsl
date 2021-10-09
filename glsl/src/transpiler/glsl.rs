@@ -1311,8 +1311,12 @@ where
   show_compound_statement(f, &fd.statement, false, true);
 }
 
-pub fn show_compound_statement<F>(f: &mut F, cst: &syntax::CompoundStatement, sp: bool, force_compound: bool)
-where
+pub fn show_compound_statement<F>(
+  f: &mut F,
+  cst: &syntax::CompoundStatement,
+  sp: bool,
+  force_compound: bool,
+) where
   F: Write,
 {
   let write_braces = cst.statement_list.len() != 1 || force_compound;
@@ -1565,7 +1569,7 @@ where
       ref ident,
       ref value,
     } => {
-      let _ = write!(f, "#define {} {}\n", ident, value);
+      let _ = write!(f, "#define {} {}", ident, value);
     }
 
     syntax::PreprocessorDefine::FunctionLike {
@@ -1583,7 +1587,7 @@ where
         }
       }
 
-      let _ = write!(f, ") {}\n", value);
+      let _ = write!(f, ") {}", value);
     }
   }
 }
@@ -1592,35 +1596,35 @@ pub fn show_preprocessor_else<F>(f: &mut F)
 where
   F: Write,
 {
-  let _ = f.write_str("#else\n");
+  let _ = f.write_str("#else");
 }
 
 pub fn show_preprocessor_elif<F>(f: &mut F, pei: &syntax::PreprocessorElIf)
 where
   F: Write,
 {
-  let _ = write!(f, "#elif {}\n", pei.condition);
+  let _ = write!(f, "#elif {}", pei.condition);
 }
 
 pub fn show_preprocessor_error<F>(f: &mut F, pe: &syntax::PreprocessorError)
 where
   F: Write,
 {
-  let _ = writeln!(f, "#error {}", pe.message);
+  let _ = write!(f, "#error {}", pe.message);
 }
 
 pub fn show_preprocessor_endif<F>(f: &mut F)
 where
   F: Write,
 {
-  let _ = f.write_str("#endif\n");
+  let _ = f.write_str("#endif");
 }
 
 pub fn show_preprocessor_if<F>(f: &mut F, pi: &syntax::PreprocessorIf)
 where
   F: Write,
 {
-  let _ = write!(f, "#if {}\n", pi.condition);
+  let _ = write!(f, "#if {}", pi.condition);
 }
 
 pub fn show_preprocessor_ifdef<F>(f: &mut F, pid: &syntax::PreprocessorIfDef)
@@ -1629,7 +1633,6 @@ where
 {
   let _ = f.write_str("#ifdef ");
   show_identifier(f, &pid.ident);
-  let _ = f.write_str("\n");
 }
 
 pub fn show_preprocessor_ifndef<F>(f: &mut F, pind: &syntax::PreprocessorIfNDef)
@@ -1638,7 +1641,6 @@ where
 {
   let _ = f.write_str("#ifndef ");
   show_identifier(f, &pind.ident);
-  let _ = f.write_str("\n");
 }
 
 // Minecraft extension
@@ -1648,7 +1650,6 @@ where
 {
   let _ = f.write_str("#moj_import ");
   show_path(f, &pi.path);
-  let _ = f.write_str("\n");
 }
 
 pub fn show_preprocessor_line<F>(f: &mut F, pl: &syntax::PreprocessorLine)
@@ -1659,14 +1660,13 @@ where
   if let Some(source_string_number) = pl.source_string_number {
     let _ = write!(f, " {}", source_string_number);
   }
-  let _ = f.write_str("\n");
 }
 
 pub fn show_preprocessor_pragma<F>(f: &mut F, pp: &syntax::PreprocessorPragma)
 where
   F: Write,
 {
-  let _ = writeln!(f, "#pragma {}", pp.command);
+  let _ = write!(f, "#pragma {}", pp.command);
 }
 
 pub fn show_preprocessor_undef<F>(f: &mut F, pud: &syntax::PreprocessorUndef)
@@ -1675,7 +1675,6 @@ where
 {
   let _ = f.write_str("#undef ");
   show_identifier(f, &pud.name);
-  let _ = f.write_str("\n");
 }
 
 pub fn show_preprocessor_version<F>(f: &mut F, pv: &syntax::PreprocessorVersion)
@@ -1697,8 +1696,6 @@ where
       }
     }
   }
-
-  let _ = f.write_str("\n");
 }
 
 pub fn show_preprocessor_extension<F>(f: &mut F, pe: &syntax::PreprocessorExtension)
@@ -1732,8 +1729,6 @@ where
       }
     }
   }
-
-  let _ = f.write_str("\n");
 }
 
 pub fn show_external_declaration<F>(f: &mut F, ed: &syntax::ExternalDeclaration)
@@ -1747,12 +1742,32 @@ where
   }
 }
 
+const fn external_declaration_requires_own_line(ed: &syntax::ExternalDeclaration) -> bool {
+  // Preprocessor directives need to be on their own line according to ISO/IEC 14882:1998,
+  // section 16
+  matches!(ed, syntax::ExternalDeclaration::Preprocessor(_))
+}
+
 pub fn show_translation_unit<F>(f: &mut F, tu: &syntax::TranslationUnit)
 where
   F: Write,
 {
+  let mut newlines_just_added = false;
+
   for ed in &(tu.0).0 {
+    let add_newlines = external_declaration_requires_own_line(ed);
+
+    if add_newlines && !newlines_just_added {
+      let _ = f.write_char('\n');
+    }
+
     show_external_declaration(f, ed);
+
+    if add_newlines {
+      let _ = f.write_char('\n');
+    }
+
+    newlines_just_added = add_newlines;
   }
 }
 
@@ -1852,7 +1867,8 @@ return u;
 }
 "#;
 
-    const DST: &'static str = r#"float rand(vec2 co,vec2 _){return fract(sin(dot(co,vec2(12.9898,78.233)))*43758.547);}"#;
+    const DST: &'static str =
+      r#"float rand(vec2 co,vec2 _){return fract(sin(dot(co,vec2(12.9898,78.233)))*43758.547);}"#;
 
     let mut s = String::new();
     show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
@@ -1979,6 +1995,30 @@ return u;
 
     let mut s = String::new();
     show_function_definition(&mut s, &function_definition(SRC).unwrap().1);
+
+    assert_eq!(s, DST);
+  }
+
+  #[test]
+  fn test_translation_unit_with_preprocessor_directives() {
+    use crate::parsers::translation_unit;
+
+    const SRC: &'static str = r#"vec4 x;
+
+#define A "B"
+#define C "D"
+
+vec4 y;
+vec4 z;
+
+#define E "F"
+"#;
+
+    const DST: &'static str =
+      "vec4 x;\n#define A \"B\"\n#define C \"D\"\nvec4 y;vec4 z;\n#define E \"F\"\n";
+
+    let mut s = String::new();
+    show_translation_unit(&mut s, &translation_unit(SRC).unwrap().1);
 
     assert_eq!(s, DST);
   }
