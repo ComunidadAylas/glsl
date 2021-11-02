@@ -726,7 +726,7 @@ where
       let _ = f.write_str("mediump");
     }
     syntax::PrecisionQualifier::Low => {
-      let _ = f.write_str("low");
+      let _ = f.write_str("lowp");
     }
   }
 }
@@ -1135,6 +1135,7 @@ where
     }
     syntax::Declaration::Precision(ref qual, ref ty) => {
       show_precision_qualifier(f, &qual);
+      let _ = f.write_str(" ");
       show_type_specifier(f, &ty);
       let _ = f.write_str(";");
     }
