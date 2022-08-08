@@ -95,6 +95,13 @@ impl HasPrecedence for syntax::AssignmentOp {
   }
 }
 
+#[derive(Clone, Copy)]
+pub enum SelectBraces {
+  None,
+  Always,
+  WhenElse
+}
+
 pub fn show_identifier<F>(f: &mut F, i: &syntax::Identifier)
 where
   F: Write,
@@ -1313,7 +1320,7 @@ where
   F: Write,
 {
   show_function_prototype(f, &fd.prototype);
-  show_compound_statement(f, &fd.statement, false, true, false);
+  show_compound_statement(f, &fd.statement, false, true, SelectBraces::None);
 }
 
 pub fn show_compound_statement<F>(
@@ -1321,7 +1328,7 @@ pub fn show_compound_statement<F>(
   cst: &syntax::CompoundStatement,
   sp: bool,
   force_compound: bool,
-  selection: bool,
+  sb: SelectBraces,
 ) where
   F: Write,
 {
@@ -1333,8 +1340,9 @@ pub fn show_compound_statement<F>(
     let _ = f.write_str(" ");
   }
 
+  let braces = if write_braces {SelectBraces::None} else {sb};
   for st in &cst.statement_list {
-    show_statement(f, st, selection && !write_braces);
+    show_statement(f, st, braces);
   }
 
   if write_braces {
@@ -1342,31 +1350,31 @@ pub fn show_compound_statement<F>(
   }
 }
 
-pub fn show_statement<F>(f: &mut F, st: &syntax::Statement, selection: bool)
+pub fn show_statement<F>(f: &mut F, st: &syntax::Statement, sb: SelectBraces)
 where
   F: Write,
 {
-  show_statement_spaced(f, st, false, selection)
+  show_statement_spaced(f, st, false, sb)
 }
 
-pub fn show_statement_spaced<F>(f: &mut F, st: &syntax::Statement, sp: bool, selection: bool)
+pub fn show_statement_spaced<F>(f: &mut F, st: &syntax::Statement, sp: bool, sb: SelectBraces)
 where
   F: Write,
 {
   match *st {
-    syntax::Statement::Compound(ref cst) => show_compound_statement(f, cst, sp, false, selection),
-    syntax::Statement::Simple(ref sst) => show_simple_statement(f, sst, sp, selection),
+    syntax::Statement::Compound(ref cst) => show_compound_statement(f, cst, sp, false, sb),
+    syntax::Statement::Simple(ref sst) => show_simple_statement(f, sst, sp, sb),
   }
 }
 
-pub fn show_simple_statement<F>(f: &mut F, sst: &syntax::SimpleStatement, sp: bool, selection: bool)
+pub fn show_simple_statement<F>(f: &mut F, sst: &syntax::SimpleStatement, sp: bool, sb: SelectBraces)
 where
   F: Write,
 {
   match *sst {
     syntax::SimpleStatement::Declaration(ref d) => show_declaration(f, d, sp),
     syntax::SimpleStatement::Expression(ref e) => show_expression_statement(f, e, sp),
-    syntax::SimpleStatement::Selection(ref s) => show_selection_statement(f, s, sp, selection),
+    syntax::SimpleStatement::Selection(ref s) => show_selection_statement(f, s, sp, sb),
     syntax::SimpleStatement::Switch(ref s) => show_switch_statement(f, s, sp),
     syntax::SimpleStatement::CaseLabel(ref cl) => show_case_label(f, cl, sp),
     syntax::SimpleStatement::Iteration(ref i) => show_iteration_statement(f, i, sp),
@@ -1389,11 +1397,16 @@ where
   let _ = f.write_str(";");
 }
 
-pub fn show_selection_statement<F>(f: &mut F, sst: &syntax::SelectionStatement, sp: bool, selection: bool)
+pub fn show_selection_statement<F>(f: &mut F, sst: &syntax::SelectionStatement, sp: bool, sb: SelectBraces)
 where
   F: Write,
 {
-  if selection {
+  let write_braces = match sb {
+    SelectBraces::None => false,
+    SelectBraces::Always => true,
+    SelectBraces::WhenElse => matches!(sst.rest, syntax::SelectionRestStatement::Else(_, _))
+  };
+  if write_braces {
     let _ = f.write_str("{");
   } else if sp {
     let _ = f.write_str(" ");
@@ -1402,7 +1415,7 @@ where
   show_expr(f, &sst.cond);
   let _ = f.write_str(")");
   show_selection_rest_statement(f, &sst.rest);
-  if selection {
+  if write_braces {
     let _ = f.write_str("}");
   }
 }
@@ -1413,12 +1426,12 @@ where
 {
   match *sst {
     syntax::SelectionRestStatement::Statement(ref if_st) => {
-      show_statement(f, if_st, true);
+      show_statement(f, if_st, SelectBraces::WhenElse);
     }
     syntax::SelectionRestStatement::Else(ref if_st, ref else_st) => {
-      show_statement(f, if_st, true);
+      show_statement(f, if_st, SelectBraces::Always);
       let _ = f.write_str("else");
-      show_statement_spaced(f, else_st, true, false);
+      show_statement_spaced(f, else_st, true, SelectBraces::None);
     }
   }
 }
@@ -1436,7 +1449,7 @@ where
   let _ = f.write_str("){");
 
   for st in &sst.body {
-    show_statement(f, st, false);
+    show_statement(f, st, SelectBraces::None);
   }
 
   let _ = f.write_str("}");
@@ -1475,11 +1488,11 @@ where
       let _ = f.write_str("while(");
       show_condition(f, cond);
       let _ = f.write_str(")");
-      show_statement(f, body, false);
+      show_statement(f, body, SelectBraces::None);
     }
     syntax::IterationStatement::DoWhile(ref body, ref cond) => {
       let _ = f.write_str("do");
-      show_statement_spaced(f, body, true, false);
+      show_statement_spaced(f, body, true, SelectBraces::None);
       let _ = f.write_str("while(");
       show_expr(f, cond);
       let _ = f.write_str(");");
@@ -1489,7 +1502,7 @@ where
       show_for_init_statement(f, init);
       show_for_rest_statement(f, rest);
       let _ = f.write_str(")");
-      show_statement(f, body, false);
+      show_statement(f, body, SelectBraces::None);
     }
   }
 }
