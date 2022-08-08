@@ -1120,10 +1120,14 @@ where
   }
 }
 
-pub fn show_declaration<F>(f: &mut F, d: &syntax::Declaration)
+pub fn show_declaration<F>(f: &mut F, d: &syntax::Declaration, sp: bool)
 where
   F: Write,
 {
+  if sp {
+    let _ = f.write_str(" ");
+  }
+
   match *d {
     syntax::Declaration::FunctionPrototype(ref proto) => {
       show_function_prototype(f, &proto);
@@ -1309,7 +1313,7 @@ where
   F: Write,
 {
   show_function_prototype(f, &fd.prototype);
-  show_compound_statement(f, &fd.statement, false, true);
+  show_compound_statement(f, &fd.statement, false, true, false);
 }
 
 pub fn show_compound_statement<F>(
@@ -1317,6 +1321,7 @@ pub fn show_compound_statement<F>(
   cst: &syntax::CompoundStatement,
   sp: bool,
   force_compound: bool,
+  selection: bool,
 ) where
   F: Write,
 {
@@ -1329,7 +1334,7 @@ pub fn show_compound_statement<F>(
   }
 
   for st in &cst.statement_list {
-    show_statement(f, st);
+    show_statement(f, st, selection && !write_braces);
   }
 
   if write_braces {
@@ -1337,60 +1342,69 @@ pub fn show_compound_statement<F>(
   }
 }
 
-pub fn show_statement<F>(f: &mut F, st: &syntax::Statement)
+pub fn show_statement<F>(f: &mut F, st: &syntax::Statement, selection: bool)
 where
   F: Write,
 {
-  show_statement_spaced(f, st, false)
+  show_statement_spaced(f, st, false, selection)
 }
 
-pub fn show_statement_spaced<F>(f: &mut F, st: &syntax::Statement, sp: bool)
+pub fn show_statement_spaced<F>(f: &mut F, st: &syntax::Statement, sp: bool, selection: bool)
 where
   F: Write,
 {
   match *st {
-    syntax::Statement::Compound(ref cst) => show_compound_statement(f, cst, sp, false),
-    syntax::Statement::Simple(ref sst) => show_simple_statement(f, sst, sp),
+    syntax::Statement::Compound(ref cst) => show_compound_statement(f, cst, sp, false, selection),
+    syntax::Statement::Simple(ref sst) => show_simple_statement(f, sst, sp, selection),
   }
 }
 
-pub fn show_simple_statement<F>(f: &mut F, sst: &syntax::SimpleStatement, sp: bool)
+pub fn show_simple_statement<F>(f: &mut F, sst: &syntax::SimpleStatement, sp: bool, selection: bool)
 where
   F: Write,
 {
-  if sp {
-    let _ = f.write_str(" ");
-  }
   match *sst {
-    syntax::SimpleStatement::Declaration(ref d) => show_declaration(f, d),
-    syntax::SimpleStatement::Expression(ref e) => show_expression_statement(f, e),
-    syntax::SimpleStatement::Selection(ref s) => show_selection_statement(f, s),
-    syntax::SimpleStatement::Switch(ref s) => show_switch_statement(f, s),
-    syntax::SimpleStatement::CaseLabel(ref cl) => show_case_label(f, cl),
-    syntax::SimpleStatement::Iteration(ref i) => show_iteration_statement(f, i),
-    syntax::SimpleStatement::Jump(ref j) => show_jump_statement(f, j),
+    syntax::SimpleStatement::Declaration(ref d) => show_declaration(f, d, sp),
+    syntax::SimpleStatement::Expression(ref e) => show_expression_statement(f, e, sp),
+    syntax::SimpleStatement::Selection(ref s) => show_selection_statement(f, s, sp, selection),
+    syntax::SimpleStatement::Switch(ref s) => show_switch_statement(f, s, sp),
+    syntax::SimpleStatement::CaseLabel(ref cl) => show_case_label(f, cl, sp),
+    syntax::SimpleStatement::Iteration(ref i) => show_iteration_statement(f, i, sp),
+    syntax::SimpleStatement::Jump(ref j) => show_jump_statement(f, j, sp),
   }
 }
 
-pub fn show_expression_statement<F>(f: &mut F, est: &syntax::ExprStatement)
+pub fn show_expression_statement<F>(f: &mut F, est: &syntax::ExprStatement, sp: bool)
 where
   F: Write,
 {
   if let Some(ref e) = *est {
+    if sp {
+      let _ = f.write_str(" ");
+    }
+
     show_expr(f, e);
   }
 
   let _ = f.write_str(";");
 }
 
-pub fn show_selection_statement<F>(f: &mut F, sst: &syntax::SelectionStatement)
+pub fn show_selection_statement<F>(f: &mut F, sst: &syntax::SelectionStatement, sp: bool, selection: bool)
 where
   F: Write,
 {
+  if selection {
+    let _ = f.write_str("{");
+  } else if sp {
+    let _ = f.write_str(" ");
+  }
   let _ = f.write_str("if(");
   show_expr(f, &sst.cond);
   let _ = f.write_str(")");
   show_selection_rest_statement(f, &sst.rest);
+  if selection {
+    let _ = f.write_str("}");
+  }
 }
 
 pub fn show_selection_rest_statement<F>(f: &mut F, sst: &syntax::SelectionRestStatement)
@@ -1399,35 +1413,43 @@ where
 {
   match *sst {
     syntax::SelectionRestStatement::Statement(ref if_st) => {
-      show_statement(f, if_st);
+      show_statement(f, if_st, true);
     }
     syntax::SelectionRestStatement::Else(ref if_st, ref else_st) => {
-      show_statement(f, if_st);
+      show_statement(f, if_st, true);
       let _ = f.write_str("else");
-      show_statement_spaced(f, else_st, true);
+      show_statement_spaced(f, else_st, true, true);
     }
   }
 }
 
-pub fn show_switch_statement<F>(f: &mut F, sst: &syntax::SwitchStatement)
+pub fn show_switch_statement<F>(f: &mut F, sst: &syntax::SwitchStatement, sp: bool)
 where
   F: Write,
 {
+  if sp {
+    let _ = f.write_str(" ");
+  }
+
   let _ = f.write_str("switch(");
   show_expr(f, &sst.head);
   let _ = f.write_str("){");
 
   for st in &sst.body {
-    show_statement(f, st);
+    show_statement(f, st, false);
   }
 
   let _ = f.write_str("}");
 }
 
-pub fn show_case_label<F>(f: &mut F, cl: &syntax::CaseLabel)
+pub fn show_case_label<F>(f: &mut F, cl: &syntax::CaseLabel, sp: bool)
 where
   F: Write,
 {
+  if sp {
+    let _ = f.write_str(" ");
+  }
+
   match *cl {
     syntax::CaseLabel::Case(ref e) => {
       let _ = f.write_str("case ");
@@ -1440,20 +1462,24 @@ where
   }
 }
 
-pub fn show_iteration_statement<F>(f: &mut F, ist: &syntax::IterationStatement)
+pub fn show_iteration_statement<F>(f: &mut F, ist: &syntax::IterationStatement, sp: bool)
 where
   F: Write,
 {
+  if sp {
+    let _ = f.write_str(" ");
+  }
+
   match *ist {
     syntax::IterationStatement::While(ref cond, ref body) => {
       let _ = f.write_str("while(");
       show_condition(f, cond);
       let _ = f.write_str(")");
-      show_statement(f, body);
+      show_statement(f, body, false);
     }
     syntax::IterationStatement::DoWhile(ref body, ref cond) => {
       let _ = f.write_str("do");
-      show_statement_spaced(f, body, true);
+      show_statement_spaced(f, body, true, false);
       let _ = f.write_str("while(");
       show_expr(f, cond);
       let _ = f.write_str(");");
@@ -1463,7 +1489,7 @@ where
       show_for_init_statement(f, init);
       show_for_rest_statement(f, rest);
       let _ = f.write_str(")");
-      show_statement(f, body);
+      show_statement(f, body, false);
     }
   }
 }
@@ -1495,7 +1521,7 @@ where
       }
       let _ = f.write_str(";");
     }
-    syntax::ForInitStatement::Declaration(ref d) => show_declaration(f, d),
+    syntax::ForInitStatement::Declaration(ref d) => show_declaration(f, d, false),
   }
 }
 
@@ -1514,10 +1540,14 @@ where
   }
 }
 
-pub fn show_jump_statement<F>(f: &mut F, j: &syntax::JumpStatement)
+pub fn show_jump_statement<F>(f: &mut F, j: &syntax::JumpStatement, sp: bool)
 where
   F: Write,
 {
+  if sp {
+    let _ = f.write_str(" ");
+  }
+
   match *j {
     syntax::JumpStatement::Continue => {
       let _ = f.write_str("continue;");
@@ -1529,8 +1559,9 @@ where
       let _ = f.write_str("discard;");
     }
     syntax::JumpStatement::Return(ref e) => {
-      let _ = f.write_str("return ");
+      let _ = f.write_str("return");
       if let Some(e) = e {
+        let _ = f.write_str(" ");
         show_expr(f, e);
       }
       let _ = f.write_str(";");
@@ -1739,7 +1770,7 @@ where
   match *ed {
     syntax::ExternalDeclaration::Preprocessor(ref pp) => show_preprocessor(f, pp),
     syntax::ExternalDeclaration::FunctionDefinition(ref fd) => show_function_definition(f, fd),
-    syntax::ExternalDeclaration::Declaration(ref d) => show_declaration(f, d),
+    syntax::ExternalDeclaration::Declaration(ref d) => show_declaration(f, d, false),
   }
 }
 
