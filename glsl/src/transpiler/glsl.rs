@@ -1393,7 +1393,7 @@ pub fn show_selection_statement<F>(f: &mut F, sst: &syntax::SelectionStatement, 
 where
   F: Write,
 {
-  if selection && matches!(sst.rest, syntax::SelectionRestStatement::Else(_, _)) {
+  if selection {
     let _ = f.write_str("{");
   } else if sp {
     let _ = f.write_str(" ");
@@ -1418,7 +1418,7 @@ where
     syntax::SelectionRestStatement::Else(ref if_st, ref else_st) => {
       show_statement(f, if_st, true);
       let _ = f.write_str("else");
-      show_statement_spaced(f, else_st, true, true);
+      show_statement_spaced(f, else_st, true, false);
     }
   }
 }
